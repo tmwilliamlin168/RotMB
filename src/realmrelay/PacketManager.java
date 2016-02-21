@@ -10,9 +10,9 @@ import realmrelay.script.PacketScriptEvent;
 
 public class PacketManager {
 
-	public static PlayerData playerData = new PlayerData();
+	public PlayerData playerData = new PlayerData();
 	
-	public static void onServerPacketEvent(PacketScriptEvent event) throws Exception {
+	public void onServerPacketEvent(PacketScriptEvent event) throws Exception {
 		Packet packet = event.getPacket();
 		if (packet instanceof Create_SuccessPacket) {
 			Create_SuccessPacket csp = (Create_SuccessPacket) packet;

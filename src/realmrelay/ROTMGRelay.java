@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
@@ -128,6 +129,30 @@ public final class ROTMGRelay {
 		this.gameIdSocketAddressMap.put(gameId, socketAddress);
 	}
 	
+	public static User login(String email, String password) throws Exception
+	{
+		int charId = 0;
+		try
+		{
+			HttpURLConnection con = (HttpURLConnection) new URL("https://realmofthemadgodhrd.appspot.com/char/list?guid="+email+"&password="+password).openConnection();
+			Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(con.getInputStream());
+			document.getDocumentElement().normalize();
+			if(document.getDocumentElement().getTagName().equals("Error"))
+				throw new Exception(document.getDocumentElement().getTextContent());
+			else
+			{
+				charId = Integer.parseInt(document.getDocumentElement().getAttribute("nextCharId"))-1;
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		User user = new User();
+		user.scriptManager.trigger("onEnable", "27.7.0", GUID.encrypt(email), GUID.encrypt(password), charId);
+		return user;
+	}
+	
 	public static void main(String[] args) {
 		try {
 			GETXmlParse.parseXMLData();
@@ -138,50 +163,27 @@ public final class ROTMGRelay {
 		Scanner sc = new Scanner(System.in);
 		String email = "";
 		String password = "";
-		boolean loginSuccess = false;
-		int charId = 0;
-		while(!loginSuccess)
-		{
-			System.out.println("Enter your email: ");
-			email = sc.nextLine();
-			System.out.println("Enter your password: ");
-			password = sc.nextLine();
-			System.out.println("Logging in...");
-			try
-			{
-				HttpURLConnection con = (HttpURLConnection) new URL("https://realmofthemadgodhrd.appspot.com/char/list?guid="+email+"&password="+password).openConnection();
-				Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(con.getInputStream());
-				document.getDocumentElement().normalize();
-				if(document.getDocumentElement().getTagName().equals("Error"))
-					System.out.println("Error: "+document.getDocumentElement().getTextContent());
-				else
-				{
-					loginSuccess = true;
-					charId = Integer.parseInt(document.getDocumentElement().getAttribute("nextCharId"))-1;
-				}
-			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-			}
-		}
+		System.out.println("Enter your email: ");
+		email = sc.nextLine();
+		System.out.println("Enter your password: ");
+		password = sc.nextLine();
+		System.out.println("Logging in...");
 		sc.close();
-		User user = null;
+		ROTMGRelay.echo("Initializing bot");
+		ROTMGRelay.startTime = System.currentTimeMillis();
+		ArrayList<User> users = new ArrayList<User>();
 		try
 		{
-			user = new User();
+			users.add(login(email, password));
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
 		}
-		ROTMGRelay.echo("Initializing bot");
-		ROTMGRelay.startTime = System.currentTimeMillis();
-		user.scriptManager.trigger("onEnable", "27.7.0", GUID.encrypt(email), GUID.encrypt(password), charId);
-		//user.scriptManager.
 		while(true)
 		{
-			user.process();
+			for(User user : users)
+				user.process();
 			try
 			{
 				Thread.sleep(25);
