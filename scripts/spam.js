@@ -4,44 +4,34 @@ var ID_NEW_TICK = $.findPacketId("NEW_TICK");
 var ID_MOVE = $.findPacketId("MOVE");
 
 var pos;
-var newticks = 0;
+var destX = 134;
+var destY = 133;
 
 function onServerPacket(event) {
 	var packet = event.getPacket();
 	switch (packet.id()) {
 		case ID_CREATE_SUCCESS: {
 			//start spam
-			//spam();
+			spam();
+			break;
 		}
 		case ID_NEW_TICK: {
 			if(!pos)
 				pos = $.getPlayerData().pos;
 			else if(pos.x == 0 && pos.y == 0)
 				pos = $.getPlayerData().pos;
-			var dx = 142-pos.x;
-			var dy = 132-pos.y;
-			var tickTime = packet.tickTime?packet.tickTime:0;
-			var dratio = Math.min(1, (4+5.6*(10/75))/1000*tickTime/Math.sqrt(dx*dx+dy*dy));
+			var dx = destX-pos.x;
+			var dy = destY-pos.y;
+			var dratio = Math.min(1, (4+5.6*(10/75))/1000*packet.tickTime/Math.sqrt(dx*dx+dy*dy));
 			dx *= dratio;
 			dy *= dratio;
-			if(newticks < 10)
-			{
-				newticks++;
-			}
-			else
-			{
-				//pos.x += dx;
-				//pos.y += dy;
-				//$.getPlayerData().pos += 0.1;
-			}
-			$.echo($.getPlayerData().pos.x);
-			$.echo($.getPlayerData().pos.y);
+			pos.x += dx;
+			pos.y += dy;
 			var movePacket = $.createPacket(ID_MOVE);
 			movePacket.tickId = packet.tickId;
-			$.echo("tickId: "+packet.tickId);
 			movePacket.time = $.getTime();
-			movePacket.newPosition = $.getPlayerData().pos;
-			//$.sendToServer(movePacket);
+			movePacket.newPosition = pos;
+			$.sendToServer(movePacket);
 			break;
 		}
 	}
